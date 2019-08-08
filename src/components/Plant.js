@@ -21,7 +21,7 @@ const Plants = (props) => {
         }}
               dataSource={props.data} renderItem={item => (<List.Item>
 
-                 <Link to= {item.id}>
+                 <Link to={item.id}>
                      <Card
                          hoverable
                          title={item.name}

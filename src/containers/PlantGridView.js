@@ -2,7 +2,7 @@ import React from 'react';
 import Plants from '../components/Plant';
 import axios from 'axios';
 
-
+import CustomForm from '../components/Form';
 
 class PlantGrid extends React.Component{
 
@@ -11,7 +11,7 @@ class PlantGrid extends React.Component{
     }
 
     componentDidMount(){
-
+// This guy seems to be used in update server too
         axios.get(
             'http://127.0.0.1:8000/monitor/api/plants/'
         )
@@ -28,7 +28,17 @@ class PlantGrid extends React.Component{
     render()
     {
         return(
-            <Plants data={this.state.plants}/>
+            <div>
+                <h2>Create a plant </h2>
+                 <CustomForm
+                     requestType="post"
+                     plantID={null}
+                     btnText="Create"
+                 />
+                <br/>
+                <Plants data={this.state.plants}/>
+            </div>
+
         )
     }
 }
