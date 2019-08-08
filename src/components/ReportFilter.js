@@ -1,10 +1,36 @@
 import React from "react";
 import { Form, DatePicker, Button, Select } from 'antd';
 import  axios from "axios";
+import {Bar, Line} from 'react-chartjs-2';
+const { MonthPicker} = DatePicker;
+
+
+
 const { Option } = Select;
+
 
 class ReportFilterForm extends React.Component {
     state = {
+        lineData: {
+        labels: "",
+        datasets: [
+
+                                  {
+                                      label: 'Observed',
+                                      data: [],
+                                      backgroundColor: [
+                                        'rgba(255, 206, 86, 0.5)'
+                                    ]
+                          },
+                                   {
+                                      label: 'Expected',
+                                      data: [],
+                                      backgroundColor: [
+                                        'rgba(75, 192, 192, 0.5)'
+                                    ]
+                          },]
+},
+
         plants: [],
         plant: '',
         data_set: [],
@@ -30,36 +56,64 @@ class ReportFilterForm extends React.Component {
         ...fieldsValue,
           'plant-picker': fieldsValue['plant-picker'],
           'metrics-picker': fieldsValue['metrics-picker'],
-          'date-picker': fieldsValue['date-picker'].format('YYYY-MM-DD'),
+          'month-picker': fieldsValue['month-picker'].format('YYYY-MM'),
       };
       // console.log('Received values of form: ', values);
       const plant = values['plant-picker'];
       const metrics = values['metrics-picker'];
-      const date = values['date-picker'];
+      const date = values['month-picker'];
       console.log('Plant: ', plant);
       console.log('Date : ', date);
       console.log('Metrics : ', metrics);
       this.setState({plant: plant});
 
-
-
-      if (metrics==='Energy'){
-          axios.get(`http://127.0.0.1:8000/monitor/api/report/${plant}`)
+        return axios.get(`http://127.0.0.1:8000/monitor/api/report/${plant}`)
               .then(res=>{
-                  this.setState({raw_data: res.data}, function(){
+                  // this.setState({
+                  //     raw_data: res.data
+                  // }, function(){
 
-                  });
+                  // });
                   console.log("What 11", res.data);
 
-                  this.data = this.state.raw_data.map((item, key) =>
-                        this.setState({
-                            energy_observed: item.energy_observed,
-                            energy_expected:item.energy_expected
-                        })
-                  );
+                  this.data = res.data.map((item, key) => {
+                      this.setState({
+                          labels: date,
+                          lineData:{
+                               ...this.state.lineData,
+                              datasets: [
+
+                                  {
+                                      label: 'Observed',
+                                      data: [...this.state.lineData.datasets[0].data, item.energy_observed],
+                                      backgroundColor: [
+                                        'rgba(255, 206, 86, 0.5)'
+                                    ]
+                          },
+                                   {
+                                      label: 'Expected',
+                                      data: [...this.state.lineData.datasets[1].data, item.energy_expected],
+                                      backgroundColor: [
+                                        'rgba(75, 192, 192, 0.5)'
+                                    ]
+                          },
 
 
-                  console.log("energy_expected", this.state.energy_expected)
+
+                              ]
+                          },
+                          energy_observed: [...this.state.energy_observed, item.energy_observed],
+                          energy_expected: [...this.state.energy_expected, item.energy_expected],
+                          irradiation_observed: [...this.state.irradiation_observed, item.irradiation_observed],
+                          irradiation_expected: [...this.state.irradiation_expected, item.irradiation_expected]
+                      }, function(){
+                          console.log(this.state.lineData.datasets)
+                      })
+                  });
+
+
+                  console.log("energy_expected", this.state.energy_expected);
+                  console.log("energy_observed", this.state.energy_observed);
 
             //
             //       this.setState({data_set: this.data}, function(){
@@ -78,10 +132,16 @@ class ReportFilterForm extends React.Component {
               .catch(error => console.error(error));
 
 
+                  //
+                  // console.log("energy_expected", this.state.energy_expected)
 
-                  console.log("energy_expected", this.state.energy_expected)
 
-          }
+
+      if (metrics==='Energy') {
+
+      }
+
+
       else if (metrics==='Irradiation'){
 
           const  data =
@@ -182,9 +242,9 @@ class ReportFilterForm extends React.Component {
                   )
                       }
               </Form.Item>
-                <Form.Item label="DatePicker">
-                    {getFieldDecorator('date-picker', config)(<DatePicker />)}
-                </Form.Item>
+                 <Form.Item label="MonthPicker">
+          {getFieldDecorator('month-picker', config)(<MonthPicker />)}
+          </Form.Item>
                 <Form.Item  wrapperCol={{
                     xs: { span: 16, offset: 0 },
                     sm: { span: 16, offset: 5 },
@@ -194,6 +254,16 @@ class ReportFilterForm extends React.Component {
                     </Button>
                 </Form.Item>
           </Form>
+            <div>
+                <Bar
+                    data={this.state.lineData}
+                    width={1000}
+                    height={250}
+                    options={{
+                        maintainAspectRatio: true
+                    }}
+/>
+            </div>
         </div>
     );
   }

@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+
+  sample:
+    container_name: sample
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - '.:/3megawattui'
+      - '/3megawattui/node_modules'
+    ports:
+      - '3001:3000'
+    environment:
+      - NODE_ENV=production
+
+
