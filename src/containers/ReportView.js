@@ -3,11 +3,10 @@ import WrappedReportFilterForm from "../components/ReportFilter";
 
 class ReportServerView extends React.Component{
 
-
     render()
     {
         return(
-            <div>
+            <div className="chart">
                 <WrappedReportFilterForm/>
             </div>
 

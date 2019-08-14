@@ -1,9 +1,11 @@
 import React from 'react';
 import Plants from '../components/Plant';
 import axios from 'axios';
-
 import CustomForm from '../components/Form';
+require('dotenv').config();
 
+const BaseURL= process.env.BASE_URL;
+const all_plants = 'monitor/api/plants/';
 class PlantGrid extends React.Component{
 
     state = {
@@ -13,7 +15,7 @@ class PlantGrid extends React.Component{
     componentDidMount(){
 // This guy seems to be used in update server too
         axios.get(
-            'http://127.0.0.1:8000/monitor/api/plants/'
+            BaseURL + all_plants
         )
             .then(
                 res=>{

@@ -1,46 +1,87 @@
 import React from "react";
 import { Form, DatePicker, Button, Select } from 'antd';
 import  axios from "axios";
-import {Bar, Line} from 'react-chartjs-2';
+import {Bar, Line} from "react-chartjs-2";
 const { MonthPicker} = DatePicker;
+require('dotenv').config();
 
-
-
+const BaseURL= 'http://127.0.0.1:8000/'; // process.env.BASE_URL;
+const plants_endpoint = 'monitor/api/plants/';
+const plant_report_endpoint = 'monitor/api/report/';
 const { Option } = Select;
 
 
+
+
 class ReportFilterForm extends React.Component {
+
     state = {
-        lineData: {
-        labels: "",
-        datasets: [
+        chartData:{
 
-                                  {
-                                      label: 'Observed',
-                                      data: [],
-                                      backgroundColor: [
-                                        'rgba(255, 206, 86, 0.5)'
-                                    ]
-                          },
-                                   {
-                                      label: 'Expected',
-                                      data: [],
-                                      backgroundColor: [
-                                        'rgba(75, 192, 192, 0.5)'
-                                    ]
-                          },]
-},
+        },
+        lineData:{
 
+        },
         plants: [],
         plant: '',
         data_set: [],
+        observed:[],
+        expected:[],
+        data_dates:[],
         energy_observed:[],
         energy_expected:[],
         irradiation_observed:[],
         irradiation_expected:[],
-
-
+        style:'',
     };
+
+
+
+     Style(){
+
+          if (this.state.data_set === null){
+              this.setState({style: 'none'})
+
+          }
+
+          else{
+              this.setState({style: 'block'})
+          }
+
+
+
+      }
+
+      Controls(){
+          var x = document.getElementById("controls");
+          if (x.style.display === "none") {
+              x.style.display = "block";
+          }
+          else {
+              x.style.display = "none";
+          }
+      }
+
+
+    LineGraph(){
+          var x = document.getElementById("line");
+          if (x.style.display === "none") {
+              x.style.display = "block";
+          }
+          else {
+              x.style.display = "none";
+          }
+      }
+
+    BarChart() {
+      var x = document.getElementById("bar");
+      if (x.style.display === "none") {
+        x.style.display = "block";
+      } else {
+        x.style.display = "none";
+      }
+    }
+
 
 
   handleSubmit = event => {
@@ -67,121 +108,195 @@ class ReportFilterForm extends React.Component {
       console.log('Metrics : ', metrics);
       this.setState({plant: plant});
 
-        return axios.get(`http://127.0.0.1:8000/monitor/api/report/${plant}`)
+
+      function formatDate(date) {
+          var d = new Date(date),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear();
+          if (month.length < 2) month = '0' + month;
+          if (day.length < 2) day = '0' + day;
+          return [year, month, day].join('-');
+      }
+
+      //  function removeDay(date) {
+      //     var d = new Date(date),
+      //         month = '' + (d.getMonth() + 1),
+      //         day = '' + d.getDate(),
+      //         year = d.getFullYear();
+      //     if (month.length < 2) month = '0' + month;
+      //     if (day.length < 2) day = '0' + day;
+      //     return [year, month].join('-');
+      // }
+
+        axios.get(BaseURL + plant_report_endpoint +`${plant}`)
               .then(res=>{
-                  // this.setState({
-                  //     raw_data: res.data
-                  // }, function(){
+                  const observed = [];
 
-                  // });
-                  console.log("What 11", res.data);
+                  const expected = [];
+                  const dates = [];
 
-                  this.data = res.data.map((item, key) => {
-                      this.setState({
-                          labels: date,
-                          lineData:{
-                               ...this.state.lineData,
-                              datasets: [
+                  if (metrics==='Energy') {
 
-                                  {
-                                      label: 'Observed',
-                                      data: [...this.state.lineData.datasets[0].data, item.energy_observed],
-                                      backgroundColor: [
-                                        'rgba(255, 206, 86, 0.5)'
-                                    ]
-                          },
-                                   {
-                                      label: 'Expected',
-                                      data: [...this.state.lineData.datasets[1].data, item.energy_expected],
-                                      backgroundColor: [
-                                        'rgba(75, 192, 192, 0.5)'
-                                    ]
-                          },
+                      this.data = res.data.forEach((item) => {
+                          dates.push(formatDate(item.datetime));
+                          var _date_;
+                          for (_date_ of dates){
+                              if (_date_.includes(date)){
+                                  expected.push(item.energy_expected);
+                                  observed.push(item.energy_observed);
+                          }
 
+                          }
 
-
-                              ]
-                          },
-                          energy_observed: [...this.state.energy_observed, item.energy_observed],
-                          energy_expected: [...this.state.energy_expected, item.energy_expected],
-                          irradiation_observed: [...this.state.irradiation_observed, item.irradiation_observed],
-                          irradiation_expected: [...this.state.irradiation_expected, item.irradiation_expected]
-                      }, function(){
-                          console.log(this.state.lineData.datasets)
-                      })
                   });
 
+                  }
+                  else if (metrics==='Irradiation'){
+                      this.data = res.data.forEach((item) => {
+                          dates.push(formatDate(item.datetime));
 
-                  console.log("energy_expected", this.state.energy_expected);
-                  console.log("energy_observed", this.state.energy_observed);
+                          var _date_;
+                          for (_date_ of dates){
+                              if (_date_.includes(date)){
+                                  expected.push(item.irradiation_expected);
+                                  observed.push(item.irradiation_observed);
+                          }
 
-            //
-            //       this.setState({data_set: this.data}, function(){
-            //           console.log("Our Data Set ", this.data);
-            //           console.log("Our Data Set ", this.state.data_set);
-            //           console.log("The Plant ", this.state.plants);
-            //
-            // });
-            //
-
-
-
+                          }
 
 
+
+                  });
+                  }
+                  this.setState({expected:expected});
+                  this.setState({observed: observed});
+                  this.setState({data_dates: dates});
+                  this.setState({
+            chartData:{
+                labels: dates,
+              datasets: [
+                    {
+                        label: 'Observation',
+                        borderColor: 'rgba(75,192,192,1)',
+                        borderCapStyle: 'butt',
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        pointBorderColor: 'rgba(75,192,192,1)',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        data: this.state.observed,
+                        backgroundColor:
+                            'rgba(255, 206, 86, 0.5)'
+
+                    },
+                    {
+                        label: 'Expectation',
+                        borderColor: 'rgba(75,192,192,1)',
+                        borderCapStyle: 'butt',
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        pointBorderColor: 'rgba(75,192,192,1)',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        data: this.state.expected,
+                        backgroundColor:
+                            'rgba(150, 90, 86, 0.5)'
+                    },
+                ]
+
+            }
+        })
+
+                  this.setState({
+            lineData:{
+                labels: dates,
+              datasets: [
+                    {
+                        label: 'Observation',
+                        fill: false,
+                        lineTension: 0.1,
+                        backgroundColor: 'rgba(7,192,192,0.4)',
+                        borderColor: 'rgba(225,192,192,1)',
+                        borderCapStyle: 'butt',
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        pointBorderColor: 'rgba(75,192,192,1)',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+                        pointHoverBorderColor: 'rgba(220,220,220,1)',
+                        pointHoverBorderWidth: 2,
+                        pointRadius: 1,
+                        pointHitRadius: 10,
+                        data: this.state.observed,
+
+                    },
+                    {
+                        label: 'Expectation',
+                       fill: false,
+                        lineTension: 0.1,
+                        backgroundColor: 'rgba(7,192,192,0.4)',
+                        borderColor: 'rgba(75,192,192,1)',
+                        borderCapStyle: 'butt',
+                        borderDash: [],
+                        borderDashOffset: 0.0,
+                        borderJoinStyle: 'miter',
+                        pointBorderColor: 'rgba(75,192,192,1)',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+                        pointHoverBorderColor: 'rgba(220,220,220,1)',
+                        pointHoverBorderWidth: 2,
+                        pointRadius: 1,
+                        pointHitRadius: 10,
+                        data: this.state.expected,
+
+                    },
+                ]
+
+            }
+        })
               })
               .catch(error => console.error(error));
 
 
-                  //
-                  // console.log("energy_expected", this.state.energy_expected)
-
-
-
-      if (metrics==='Energy') {
-
-      }
-
-
-      else if (metrics==='Irradiation'){
-
-          const  data =
-              [
-                  {'irradiation_observed': 351, 'irradiation_expected': 271},
-                  {'irradiation_observed': 331, 'irradiation_expected': 181},
-                  {'irradiation_observed': 221, 'irradiation_expected': 281},
-                  {'irradiation_observed': 151, 'irradiation_expected': 181},
-              ];
-
-            this.setState({data_set: data}, function(){
-                console.log("Our Data Set ", data);
-                console.log("Our Data Set ", this.state.data_set);
-                console.log("The Plant ", this.state.plants);
-
-            });
-
-
-
-      }
-
-
-
-
-
 
     });
+
+    this.Controls();
   };
+
+
+
 
 
 
   componentDidMount(){
 
         axios.get(
-            'http://127.0.0.1:8000/monitor/api/plants/'
+            BaseURL+plants_endpoint
         )
             .then(res=>{this.setState({plants: res.data})})
 
 
     }
+    static defaultProps = {
+        displayTitle:true,
+        displayLegend: true,
+        legendsPosition: 'right',
+
+    };
+
+
+
 
 
   render() {
@@ -213,6 +328,10 @@ class ReportFilterForm extends React.Component {
     const config = {
       rules: [{ type: 'object', required: true, message: 'Please select time!' }],
     };
+
+    console.log("Base ", process.env.BASE_URL);
+
+
 
     return (
         <div>
@@ -249,21 +368,64 @@ class ReportFilterForm extends React.Component {
                     xs: { span: 16, offset: 0 },
                     sm: { span: 16, offset: 5 },
                 }}>
-                    <Button type="primary" htmlType="submit">
+                    <Button type="primary"  htmlType="submit">
                         Generate Report
                     </Button>
                 </Form.Item>
           </Form>
-            <div>
-                <Bar
-                    data={this.state.lineData}
-                    width={1000}
-                    height={250}
-                    options={{
-                        maintainAspectRatio: true
-                    }}
-/>
+            <div id="controls" style={{display: 'none'}}>
+              <input type="radio"
+                     checked={this.state.value === 1}
+                     onChange={() => this.LineGraph()}
+              />
+                <input
+                    type="radio"
+                    checked={this.state.value === 2}
+                    onChange={() => this.BarChart()}
+                />
+
             </div>
+            <div id="bar" style={{display: 'none'}}>
+                 <Bar
+                    data={this.state.chartData}
+                options={{
+                title: {
+                    display: this.props.displayTitle,
+                    text: 'Bar Chart Report',
+                    fontSize: 25
+
+
+                },
+                    legend:{
+                     display: this.props.displayLegend,
+                        position: this.props.legendsPosition,
+                    },
+                    maintainAspectRatio:true
+                }}
+                />
+
+            </div>
+            <div id="line" style={{display: 'none'}}>
+                <Line
+                    data={this.state.lineData}
+                options={{
+                title: {
+                    display: this.props.displayTitle,
+                    text: 'Line Graph Report',
+                    fontSize: 25
+
+
+                },
+                    legend:{
+                     display: this.props.displayLegend,
+                        position: this.props.legendsPosition,
+                    },
+                    maintainAspectRatio:true
+                }}
+                />
+            </div>
+
+
         </div>
     );
   }
@@ -272,8 +434,6 @@ class ReportFilterForm extends React.Component {
 const WrappedReportFilterForm = Form.create({ name: 'time_related_controls' })(ReportFilterForm);
 
 export default WrappedReportFilterForm;
-
-
 
 
 
