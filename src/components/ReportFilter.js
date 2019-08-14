@@ -5,11 +5,15 @@ import {Bar, Line} from "react-chartjs-2";
 const { MonthPicker} = DatePicker;
 require('dotenv').config();
 
-const BaseURL= 'http://127.0.0.1:8000/'; // process.env.BASE_URL;
+
+
+const BaseURL= 'http://127.0.0.1:8000/';
+
 const plants_endpoint = 'monitor/api/plants/';
 const plant_report_endpoint = 'monitor/api/report/';
 const { Option } = Select;
-
+const BAR_CHART ="1";
+const LINE_CHART="2";
 
 
 
@@ -33,6 +37,10 @@ class ReportFilterForm extends React.Component {
         irradiation_observed:[],
         irradiation_expected:[],
         style:'',
+        checkedBarChart: false,
+        checkedLineChart: false,
+        selectedChart: '',
+
     };
 
 
@@ -52,35 +60,14 @@ class ReportFilterForm extends React.Component {
 
       }
 
-      Controls(){
-          var x = document.getElementById("controls");
-          if (x.style.display === "none") {
-              x.style.display = "block";
-          }
-          else {
-              x.style.display = "none";
-          }
-      }
 
 
-    LineGraph(){
-          var x = document.getElementById("line");
-          if (x.style.display === "none") {
-              x.style.display = "block";
-          }
-          else {
-              x.style.display = "none";
-          }
-      }
+      handleRadioChange =(e)=>{
+         let value = e.target.value;
+         this.setState({selectedChart: e.target.value});
+         console.log(value);
 
-    BarChart() {
-      var x = document.getElementById("bar");
-      if (x.style.display === "none") {
-        x.style.display = "block";
-      } else {
-        x.style.display = "none";
-      }
-    }
+      };
 
 
 
@@ -118,16 +105,6 @@ class ReportFilterForm extends React.Component {
           if (day.length < 2) day = '0' + day;
           return [year, month, day].join('-');
       }
-
-      //  function removeDay(date) {
-      //     var d = new Date(date),
-      //         month = '' + (d.getMonth() + 1),
-      //         day = '' + d.getDate(),
-      //         year = d.getFullYear();
-      //     if (month.length < 2) month = '0' + month;
-      //     if (day.length < 2) day = '0' + day;
-      //     return [year, month].join('-');
-      // }
 
         axios.get(BaseURL + plant_report_endpoint +`${plant}`)
               .then(res=>{
@@ -169,6 +146,7 @@ class ReportFilterForm extends React.Component {
 
                   });
                   }
+
                   this.setState({expected:expected});
                   this.setState({observed: observed});
                   this.setState({data_dates: dates});
@@ -271,7 +249,6 @@ class ReportFilterForm extends React.Component {
 
     });
 
-    this.Controls();
   };
 
 
@@ -329,9 +306,11 @@ class ReportFilterForm extends React.Component {
       rules: [{ type: 'object', required: true, message: 'Please select time!' }],
     };
 
-    console.log("Base ", process.env.BASE_URL);
 
 
+
+    const {observed, selectedChart} = this.state;
+    console.log(selectedChart)
 
     return (
         <div>
@@ -373,20 +352,23 @@ class ReportFilterForm extends React.Component {
                     </Button>
                 </Form.Item>
           </Form>
-            <div id="controls" style={{display: 'none'}}>
+            <div id="controls">
               <input type="radio"
-                     checked={this.state.value === 1}
-                     onChange={() => this.LineGraph()}
+                     checked={selectedChart === BAR_CHART}
+                     value={BAR_CHART}
+                     onChange={this.handleRadioChange}
               />
                 <input
                     type="radio"
-                    checked={this.state.value === 2}
-                    onChange={() => this.BarChart()}
+                    checked={selectedChart === LINE_CHART}
+                    value={LINE_CHART}
+                    onChange={this.handleRadioChange}
                 />
 
             </div>
-            <div id="bar" style={{display: 'none'}}>
-                 <Bar
+            {selectedChart===BAR_CHART &&
+                <div id="bar">
+                {(observed.length> 0) ? <Bar
                     data={this.state.chartData}
                 options={{
                 title: {
@@ -402,11 +384,13 @@ class ReportFilterForm extends React.Component {
                     },
                     maintainAspectRatio:true
                 }}
-                />
+                />: <h1> No Record Found</h1>}
 
             </div>
-            <div id="line" style={{display: 'none'}}>
-                <Line
+            }
+            {selectedChart===LINE_CHART &&
+                <div id="line">
+                {(observed.length> 0) ?<Line
                     data={this.state.lineData}
                 options={{
                 title: {
@@ -422,8 +406,9 @@ class ReportFilterForm extends React.Component {
                     },
                     maintainAspectRatio:true
                 }}
-                />
+                />: <h1>No Record Found</h1>}
             </div>
+            }
 
 
         </div>

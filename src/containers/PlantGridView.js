@@ -4,7 +4,7 @@ import axios from 'axios';
 import CustomForm from '../components/Form';
 require('dotenv').config();
 
-const BaseURL= process.env.BASE_URL;
+const BaseURL= 'http://127.0.0.1:8000/';
 const all_plants = 'monitor/api/plants/';
 class PlantGrid extends React.Component{
 
